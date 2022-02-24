@@ -1,18 +1,22 @@
 package lesson1
 
+import org.junit.Assert
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import util.PerfResult
 import util.estimate
 import java.io.BufferedWriter
 import java.io.File
+import java.io.IOException
+import java.lang.IllegalArgumentException
 import java.util.*
 import kotlin.math.abs
 import kotlin.system.measureNanoTime
 
+
 abstract class AbstractTaskTests : AbstractFileTests() {
 
     protected fun sortTimes(sortTimes: (String, String) -> Unit) {
-        try {
+        /*try {
             sortTimes("input/time_in1.txt", "temp.txt")
             assertFileContent(
                 "temp.txt",
@@ -25,6 +29,13 @@ abstract class AbstractTaskTests : AbstractFileTests() {
                      07:56:14 PM
                 """.trimIndent()
             )
+        } finally {
+            File("temp.txt").delete()
+        }*/
+        try {
+            sortTimes("input/my_test_sorttimes.txt", "temp.txt")
+        } catch (thrown: IllegalArgumentException) {
+            Assert.assertNotEquals("Неверный формат данных", thrown.message)
         } finally {
             File("temp.txt").delete()
         }
@@ -200,6 +211,22 @@ abstract class AbstractTaskTests : AbstractFileTests() {
     }
 
     protected fun sortSequence(sortSequence: (String, String) -> Unit) {
+        try {
+            sortSequence("input/seq_in6.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                        2
+                        3
+                        4
+                        5
+                        6
+                        1
+                    """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
         try {
             sortSequence("input/seq_in1.txt", "temp.txt")
             assertFileContent(
