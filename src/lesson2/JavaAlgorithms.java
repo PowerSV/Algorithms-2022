@@ -97,26 +97,62 @@ public class JavaAlgorithms {
      * Если имеется несколько самых длинных общих подстрок одной длины,
      * вернуть ту из них, которая встречается раньше в строке first.
      */
+    // Трудоемкость O(n * m)
+    // Ресурсоемкость O(1)
     static public String longestCommonSubstring(String first, String second) {
-        int sizeFirst = first.length();
-        int sizeSecond = second.length();
         int start = 0;
         int max = 0;
-        int[][] array = new int[sizeFirst + 1][sizeSecond + 1];
-        for (int i = 1; i < sizeFirst + 1; i++) {
-            for (int j = 1; j < sizeSecond + 1; j++) {
-                if (first.charAt(i - 1) == second.charAt(j - 1)) {
-                    array[i][j] = array[i - 1][j - 1] + 1;
-                    if (array[i][j] > max) {
-                        max = array[i][j];
+        int counter;
+        // последовательно проходим по главной диагонали матрицы и по диагоналям, которые выше главной
+        // за главную, принимаю диагональ a[i][i]
+        //    с р  е д а
+        //   ____________
+        // е  \. . . . . |
+        // д  . \. . . . |
+        // а  . .\ . . . |
+        //        -------
+        for (int diag = 0; diag < second.length(); diag++) {
+            counter = 0;
+            for (int i = 0; i < first.length(); i++) {
+                if (i + diag >= second.length()) {
+                    continue;
+                }
+                if (first.charAt(i) == second.charAt(i + diag)) {
+                    counter++;
+                    if (counter > max) {
+                        max = counter;
                         start = i;
                     }
+                } else {
+                    counter = 0;
                 }
             }
         }
-        return first.substring(start - max, start);
+        // последовательно проходим по главной диагоналям матрицы, которые ниже главной
+        //    с р е д а
+        // е |\.. . . .
+        // д |.\. . . .
+        // а |..\ . . .
+        //   ----
+        for (int diag = 1; diag < first.length(); diag++) {
+            counter = 0;
+            for (int j = 0; j < second.length(); j++) {
+                if (j + diag >= first.length()) {
+                    continue;
+                }
+                if (second.charAt(j) == first.charAt(j + diag)) {
+                    counter++;
+                    if (counter > max) {
+                        max = counter;
+                        start = j + diag;
+                    }
+                } else {
+                    counter = 0;
+                }
+            }
+        }
+        return first.substring(start - max + 1, start + 1);
     }
-
     /**
      * Число простых чисел в интервале
      * Простая
@@ -127,7 +163,24 @@ public class JavaAlgorithms {
      * Справка: простым считается число, которое делится нацело только на 1 и на себя.
      * Единица простым числом не считается.
      */
+    // Трудоемкость O(n log(log n))
+    // Ресурсоемкость O(n)
     static public int calcPrimesNumber(int limit) {
-        throw new NotImplementedError();
+        if (limit <= 1) {
+            return 0;
+        }
+        int counter = limit - 1;
+        boolean[] array = new boolean[limit + 1];
+        for (int i = 2; i * i <= limit; i++) {
+            if (!array[i]) {
+                for (int j = i * i; j <= limit; j += i) {
+                    if (!array[j]) {
+                        array[j] = true;
+                        counter--;
+                    }
+                }
+            }
+        }
+        return counter;
     }
 }
