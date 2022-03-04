@@ -4,8 +4,7 @@ import kotlin.NotImplementedError;
 
 import java.io.*;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
 
 @SuppressWarnings("unused")
@@ -41,30 +40,31 @@ public class JavaTasks {
      * В случае обнаружения неверного формата файла бросить любое исключение.
      */
 
-
-
     // Трудоемкость O(n * log n)
     // Ресурсоемкость O(n)
     static public void sortTimes(String inputName, String outputName) throws IOException {
         // создаем массив, в котором будем хранить время в секундах
-        ArrayList<Integer> secondsArr = new ArrayList<>();      // R = O(n)
+        List<Integer> secondsArr = new ArrayList<>();      // R = O(n)
+        Map<Integer, String> secondsString = new HashMap<>();
         File inputFile = new File(inputName);
-        BufferedReader br = new BufferedReader(new FileReader(inputFile));
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFile))) {
+            String line = br.readLine();    // в этой строке хранится очередная строка из файла
 
-        String line = br.readLine();    // в этой строке хранится очередная строка из файла
-
-        // заполняем массив
-        // T = O(n), где n - кол-во строк в файле
-        // проходим по всем строка: переводим в секунды -> добавляем в массив -> читаем следующую строку
-        while (line != null) {
-            if (!line.matches("^\\d{2}:\\d{2}:\\d{2}\\s([AP])M$")) {
-                throw new IllegalArgumentException("Неверный формат данных");
-            } else {
-                secondsArr.add(stringToSec(line));
+            // заполняем массив
+            // T = O(n), где n - кол-во строк в файле
+            // проходим по всем строка: переводим в секунды -> добавляем в массив -> читаем следующую строку
+            int sec;
+            while (line != null) {
+                if (!line.matches("^\\d{2}:\\d{2}:\\d{2}\\s([AP])M$")) {
+                    throw new IllegalArgumentException("Неверный формат данных");
+                } else {
+                    sec = stringToSec(line);
+                    secondsArr.add(sec);
+                    secondsString.put(sec, line);
+                }
+                line = br.readLine();
             }
-            line = br.readLine();
         }
-        br.close();
 
         // сортируем массив, используется алгоритм сортировки слияниями.
                                             // T = O (n  * log n)
@@ -76,11 +76,11 @@ public class JavaTasks {
             outputFile.createNewFile();
 
         // T = O(n)
-        PrintWriter writer = new PrintWriter(outputFile);
-        for (int time : secondsArr) {
-            writer.println(secToString(time));  // печатаем в выходной файл время, преобразованное в строку
+        try (PrintWriter writer = new PrintWriter(outputFile)) {
+            for (int time : secondsArr) {
+                writer.println(secondsString.get(time));  // печатаем в выходной файл время, преобразованное в строку
+            }
         }
-        writer.close();
     }
 
     // Трудоемкость Т = O(1)
@@ -100,31 +100,7 @@ public class JavaTasks {
             throw new IllegalArgumentException("Неверный формат данных");
         return hours * 3600 + minutes * 60 + seconds;
     }
-    // Трудоемкость Т = O(1)
-    // Перевод секунд в строку
-    static private String secToString(Integer time) {
-        int hours = time / 3600;
-        int minutes = time % 3600 / 60;
-        int seconds = time % 3600 % 60;
-        String ampm;
 
-        if (hours >= 12) {
-            if (hours > 12) hours -= 12; // 12 PM == 12.00
-            ampm = "PM";
-        } else {
-            if (hours == 0) hours = 12;  // 12 АМ == 00.00
-            ampm = "AM";
-        }
-        // используется DecimalFormat для вывода типа: 01 или 03 и т.п.
-        DecimalFormat df = new DecimalFormat("00");
-        return df.format(hours) +
-                ":" +
-                df.format(minutes) +
-                ":" +
-                df.format(seconds) +
-                " " +
-                ampm;
-    }
 
     /**
      * Сортировка адресов
@@ -186,8 +162,37 @@ public class JavaTasks {
      * 99.5
      * 121.3
      */
-    static public void sortTemperatures(String inputName, String outputName) {
-        throw new NotImplementedError();
+    static public void sortTemperatures(String inputName, String outputName) throws IOException {
+        File inputFile = new File(inputName);
+        File outputFile = new File(outputName);
+        if (!outputFile.exists())           // если такой файл не найден, создаем его
+            outputFile.createNewFile();
+
+        int[] tempArr = new int[5000 + 2730 + 1];
+        int stringCounter = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFile));
+        PrintWriter writer = new PrintWriter(new File(outputName))) {
+            String line = br.readLine();
+            int i;
+            while (line != null) {
+                if (!line.isEmpty()) {
+                    i = Integer.parseInt(line.replaceAll("\\.", ""));
+                    if (i < -2730 || i > 5000) {
+                        throw new IllegalArgumentException("Неверный формат данных");
+                    }
+                    tempArr[i + 2730]++;
+                    stringCounter++;
+                }
+                line = br.readLine();
+            }
+
+            for (int j = 0; j < 7731; j++) {
+                while (tempArr[j] > 0) {
+                    writer.println((j - 2730) / 10.0);
+                    tempArr[j]--;
+                }
+            }
+        }
     }
 
     /**
@@ -220,59 +225,58 @@ public class JavaTasks {
      * 2
      */
 
-    // Трудоемкость O(n * log n)
+    // Трудоемкость O(n)
     // Ресурсоемкость O(n)
     static public void sortSequence(String inputName, String outputName) throws IOException {
         File inputFile = new File(inputName);
-        ArrayList<Integer> numbers = new ArrayList<>(); // сюда запишем все числа
+        List<Integer> numbersArr = new ArrayList<>(); // сюда запишем все числа
         // Считываем файл, заполняем массив числами
-        BufferedReader br = new BufferedReader(new FileReader(inputFile));
-        String line = br.readLine();    // в этой строке хранится очередная строка из файла
-        // T = O(n), n - кол-во строк в файле
-        while (line != null) {
-            if (!line.isEmpty()) {
-                numbers.add(Integer.parseInt(line));
+        int min = Integer.MAX_VALUE;
+        int max = 0;
+        int number;
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFile))) {
+            String line = br.readLine();    // в этой строке хранится очередная строка из файла
+            // T = O(n), n - кол-во строк в файле
+            while (line != null) {
+                if (!line.isEmpty()) {
+                    number = Integer.parseInt(line);
+                    if (number > max) max = number;
+                    if (number < min) min = number;
+                    numbersArr.add(number);
+                }
+                line = br.readLine();
             }
-            line = br.readLine();
         }
-        br.close();
 
         // создаем объект - выходной файл
         File outputFile = new File(outputName);
         if (!outputFile.exists())           // если такой файл не найден, создаем его
             outputFile.createNewFile();
 
-        if (!numbers.isEmpty()) {
-            ArrayList<Integer> outArray = new ArrayList<>(numbers); // копируем массив для вывода
-
-            // сортируем массив, используется алгоритм сортировки слияниями.
-            // T = O (n  * log n)
-            Collections.sort(numbers);      // R = O(n)
-
-            // находим число, которое встречается в этой последовательности наибольшее количество раз
-            // T = O(n)
-            int max = 1;
-            int count = 1;
-            int element = numbers.get(0);
-            for (int i = 0; i < numbers.size() - 1; i++) {
-                if (numbers.get(i).equals(numbers.get(i + 1))) {
-                    count++;
-                } else count = 1;
-                if (count > max) {
-                    element = numbers.get(i);
-                    max = count;
+        if (!numbersArr.isEmpty()) {
+            int[] count = new int[max - min + 1];
+            int mostFreq = 0;                       // сколько раз встретился
+            int mostFreqNumber = numbersArr.get(0); // самый часто втречающийся элемент
+            for (int element : numbersArr) {
+                count[element - min]++;
+                if (count[element - min] > mostFreq
+                        || (count[element - min] == mostFreq && element < mostFreqNumber)) {
+                    mostFreq = count[element - min];
+                    mostFreqNumber = element;
                 }
             }
 
             // T = O(n)
-            PrintWriter writer = new PrintWriter(outputFile);
-            for (int number : outArray) {
-                if (number != element) writer.println(number);
+            try (PrintWriter writer = new PrintWriter(outputFile)) {
+                for (int element : numbersArr) {
+                    if (element == mostFreqNumber) continue;
+                    writer.println(element);
+                }
+                while (mostFreq > 0) {
+                    writer.println(mostFreqNumber);
+                    mostFreq--;
+                }
             }
-            for (int i = 0; i < max; i++) {
-                writer.println(element);
-            }
-            writer.close();
         }
     }
 

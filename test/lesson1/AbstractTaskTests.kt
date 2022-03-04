@@ -16,7 +16,7 @@ import kotlin.system.measureNanoTime
 abstract class AbstractTaskTests : AbstractFileTests() {
 
     protected fun sortTimes(sortTimes: (String, String) -> Unit) {
-        /*try {
+        try {
             sortTimes("input/time_in1.txt", "temp.txt")
             assertFileContent(
                 "temp.txt",
@@ -31,11 +31,11 @@ abstract class AbstractTaskTests : AbstractFileTests() {
             )
         } finally {
             File("temp.txt").delete()
-        }*/
+        }
         try {
             sortTimes("input/my_test_sorttimes.txt", "temp.txt")
         } catch (thrown: IllegalArgumentException) {
-            Assert.assertNotEquals("Неверный формат данных", thrown.message)
+            Assert.assertEquals("Неверный формат данных", thrown.message)
         } finally {
             File("temp.txt").delete()
         }
@@ -124,6 +124,44 @@ abstract class AbstractTaskTests : AbstractFileTests() {
     }
 
     protected fun sortTemperatures(sortTemperatures: (String, String) -> Unit) {
+        try {
+            sortTemperatures("input/temp_in2.txt", "temp.txt")
+        } catch (thrown: IllegalArgumentException) {
+            Assert.assertEquals("Неверный формат данных", thrown.message)
+        } finally {
+            File("temp.txt").delete()
+        }
+        try {
+            sortTemperatures("input/temp_in3.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                    -12.6
+                    -12.6
+                    -12.6
+                    -12.6
+                    -12.6
+                    -12.6
+                """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
+        try {
+            sortTemperatures("input/temp_in4.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                    -123.4
+                    -15.0
+                    0.0
+                    120.3
+                    273.0
+                """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
         try {
             sortTemperatures("input/temp_in1.txt", "temp.txt")
             assertFileContent(
