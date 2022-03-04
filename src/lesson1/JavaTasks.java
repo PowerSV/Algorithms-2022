@@ -162,6 +162,8 @@ public class JavaTasks {
      * 99.5
      * 121.3
      */
+    // Трудоемкость O(n)
+    // Ресурсоемкость O(n)
     static public void sortTemperatures(String inputName, String outputName) throws IOException {
         File inputFile = new File(inputName);
         File outputFile = new File(outputName);
