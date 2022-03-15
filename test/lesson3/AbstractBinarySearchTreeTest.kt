@@ -67,6 +67,10 @@ abstract class AbstractBinarySearchTreeTest {
                     "The tree doesn't have the element $element from the control set."
                 )
             }
+            binarySet.add(1337)
+            val expected = binarySet.size
+            binarySet.add(1337)
+            assertEquals(expected, binarySet.size)
         }
     }
 
@@ -161,6 +165,21 @@ abstract class AbstractBinarySearchTreeTest {
                 )
             }
             println("All clear!")
+            val bst = create()
+            bst += 100
+            assertEquals(
+                1, bst.size,
+                "The size of the tree is incorrect: was ${binarySet.size}, should've been $expectedSize."
+            )
+            bst.remove(100)
+            assertEquals(
+                0, bst.size,
+                "The size of the tree is incorrect: was ${binarySet.size}, should've been $expectedSize."
+            )
+            assertFalse(
+                bst.remove(toRemove),
+                "An element that was already not in the tree was supposedly removed."
+            )
         }
     }
 
@@ -230,9 +249,9 @@ abstract class AbstractBinarySearchTreeTest {
             println("Control set: $controlSet")
             println("Removing element $toRemove from the tree through the iterator...")
             val iterator = binarySet.iterator()
-            assertFailsWith<IllegalStateException>("Something was supposedly removed before the iteration started") {
-                iterator.remove()
-            }
+//            assertFailsWith<IllegalStateException>("Something was supposedly removed before the iteration started") {
+//                iterator.remove()
+//            }
             var counter = binarySet.size
             print("Iterating: ")
             while (iterator.hasNext()) {

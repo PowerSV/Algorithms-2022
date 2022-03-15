@@ -28,7 +28,9 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
     }
 
     private Node<T> find(T value) {
-        if (root == null) return null;
+        if (root == null) {
+            return null;
+        }
         return find(root, value);
     }
 
@@ -38,12 +40,50 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
             return start;
         }
         else if (comparison < 0) {
-            if (start.left == null) return start;
+            if (start.left == null) {
+                return start;
+            }
             return find(start.left, value);
         }
         else {
-            if (start.right == null) return start;
+            if (start.right == null) {
+                return start;
+            }
             return find(start.right, value);
+        }
+    }
+
+    private Node<T> findParent(T value) {
+        if (root == null) {
+            return null;
+        }
+        return findParent(root, value);
+    }
+
+    private Node<T> findParent(Node<T> parent, T value) {
+        int comparison = value.compareTo(parent.value);
+        if (comparison == 0) {
+            return parent;
+        }
+        else if (comparison < 0) {
+            if (parent.left == null) {
+                return null;
+            }
+            else if (parent.left.value == value) {
+                return parent;
+            }
+            else {
+                return findParent(parent.left, value);
+            }
+        }
+        else {
+            if (parent.right == null) {
+                return null;
+            }
+            else if (parent.right.value == value) {
+                return parent;
+            }
+            return findParent(parent.right, value);
         }
     }
 
@@ -99,10 +139,61 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
      *
      * Средняя
      */
+
+    // трудоемкость O(log n)
+    // ресурсоемкость O(n)
     @Override
     public boolean remove(Object o) {
-        // TODO
-        throw new NotImplementedError();
+        if (!contains(o)) {
+            return false;
+        }
+        @SuppressWarnings("unchecked")
+        T t = (T) o;
+        Node<T> toRemove = find(t);
+        Node<T> parent = findParent(t);
+        assert toRemove != null;
+
+        if (toRemove.left == null && toRemove.right == null) {      // если у узла нет "детей"
+            replaceToRemove(null, toRemove, parent);            // то просто удаляем
+        } else if (toRemove.left == null) {                          // если у узла только справа дети
+            replaceToRemove(toRemove.right, toRemove, parent);       // то ставим на место родителя детей
+        } else if (toRemove.right == null) {                         // если у узла только слева дети
+            replaceToRemove(toRemove.left, toRemove, parent);        // то ставим на место родителя детей
+        } else {
+            Node<T> heir = findHeir(toRemove);
+            replaceToRemove(heir, toRemove, parent);
+        }
+        size--;
+        return  true;
+    }
+
+    private void replaceToRemove(Node<T> heir, Node<T> toRemove, Node<T> parent) {
+        if (toRemove == root) {                                 // если узел был корнем,
+            root = heir;                                        // то изменяем корень
+        } else if (parent.left == toRemove) {
+            parent.left = heir;
+        } else {
+            parent.right = heir;
+        }
+    }
+    // Трудоемкость O(log n)
+    private Node<T> findHeir(Node<T> parent) {
+        Node<T> tempParent = parent;           // родитель преемника
+        Node<T> heir = parent;                 // преемник
+        Node<T> current = parent.right;
+        while (current != null) {
+            tempParent = heir;
+            heir = current;
+            current = current.left;
+        }
+        if (parent.right != heir) {            // если узел не справа от предшественника
+            tempParent.left = heir.right;      // то правые узлы приемника становятся левыми узлами родителя
+            heir.left = parent.left;           // узлы предшественника становятся узлами преемника
+            heir.right = parent.right;
+        } else {
+            heir.left = parent.left;           // иначе левые узлы предшественника становятся узлами преемника
+        }
+        return heir;
     }
 
     @Nullable
@@ -119,8 +210,21 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
 
     public class BinarySearchTreeIterator implements Iterator<T> {
 
+        List<Node<T>> list = new ArrayList<>();
+        int index;
+        boolean wasRemoved = false;
         private BinarySearchTreeIterator() {
-            // Добавьте сюда инициализацию, если она необходима.
+            index = 0;
+            fillList(root);
+        }
+        // Трудоемкость O(n)
+        // ресурсоемкость O(n)
+        private void fillList(Node<T> node) {
+            if (node != null) {
+                fillList(node.left);
+                list.add(node);
+                fillList(node.right);
+            }
         }
 
         /**
@@ -135,8 +239,7 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
          */
         @Override
         public boolean hasNext() {
-            // TODO
-            throw new NotImplementedError();
+            return index < list.size();
         }
 
         /**
@@ -154,8 +257,10 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
          */
         @Override
         public T next() {
-            // TODO
-            throw new NotImplementedError();
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return list.get(index++).value;
         }
 
         /**
@@ -172,10 +277,16 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
          */
         @Override
         public void remove() {
-            // TODO
-            throw new NotImplementedError();
+            Node<T> temp = list.get(index - 1);
+            if (temp == null || wasRemoved) {
+                throw new IllegalStateException();
+            }
+            BinarySearchTree.this.remove(temp.value);
+            wasRemoved = true;
         }
     }
+    // трудоемкость O(log n)
+    // ресурсоемкость O(n)
 
     /**
      * Подмножество всех элементов в диапазоне [fromElement, toElement)

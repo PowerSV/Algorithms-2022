@@ -3,7 +3,6 @@ package lesson1;
 import kotlin.NotImplementedError;
 
 import java.io.*;
-import java.text.DecimalFormat;
 import java.util.*;
 
 
@@ -188,7 +187,7 @@ public class JavaTasks {
                 line = br.readLine();
             }
 
-            for (int j = 0; j < 7731; j++) {
+            for (int j = 0; j < tempArr.length; j++) {
                 while (tempArr[j] > 0) {
                     writer.println((j - 2730) / 10.0);
                     tempArr[j]--;
@@ -256,14 +255,16 @@ public class JavaTasks {
             outputFile.createNewFile();
 
         if (!numbersArr.isEmpty()) {
-            int[] count = new int[max - min + 1];
+            Map<Integer, Integer> count = new HashMap<>();
+            int temp;
             int mostFreq = 0;                       // сколько раз встретился
             int mostFreqNumber = numbersArr.get(0); // самый часто втречающийся элемент
             for (int element : numbersArr) {
-                count[element - min]++;
-                if (count[element - min] > mostFreq
-                        || (count[element - min] == mostFreq && element < mostFreqNumber)) {
-                    mostFreq = count[element - min];
+                temp = count.get(element) == null ? 1 : count.get(element) + 1;
+                count.put(element, temp);
+                if (count.get(element) > mostFreq
+                        || (count.get(element) == mostFreq && element < mostFreqNumber)) {
+                    mostFreq = count.get(element);
                     mostFreqNumber = element;
                 }
             }

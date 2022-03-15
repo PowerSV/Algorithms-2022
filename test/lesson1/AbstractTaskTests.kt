@@ -33,6 +33,20 @@ abstract class AbstractTaskTests : AbstractFileTests() {
             File("temp.txt").delete()
         }
         try {
+            sortTimes("input/my_test_sorttimes2.txt", "temp.txt")
+            assertFileContent(
+                "temp.txt",
+                """
+                     01:15:19 PM
+                     01:15:19 PM
+                     01:15:19 PM
+                     01:15:19 PM
+                """.trimIndent()
+            )
+        } finally {
+            File("temp.txt").delete()
+        }
+        try {
             sortTimes("input/my_test_sorttimes.txt", "temp.txt")
         } catch (thrown: IllegalArgumentException) {
             Assert.assertEquals("Неверный формат данных", thrown.message)
