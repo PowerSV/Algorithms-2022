@@ -28,9 +28,7 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
     }
 
     private Node<T> find(T value) {
-        if (root == null) {
-            return null;
-        }
+        if (root == null) return null;
         return find(root, value);
     }
 
@@ -40,15 +38,11 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
             return start;
         }
         else if (comparison < 0) {
-            if (start.left == null) {
-                return start;
-            }
+            if (start.left == null) return start;
             return find(start.left, value);
         }
         else {
-            if (start.right == null) {
-                return start;
-            }
+            if (start.right == null) return start;
             return find(start.right, value);
         }
     }
@@ -210,20 +204,18 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
 
     public class BinarySearchTreeIterator implements Iterator<T> {
 
-        List<Node<T>> list = new ArrayList<>();
-        int index;
-        boolean wasRemoved = false;
+        Deque<Node<T>> stack = new ArrayDeque<>();
+        Node<T> current = null;
+
         private BinarySearchTreeIterator() {
-            index = 0;
-            fillList(root);
+            fillStack(root);
         }
-        // Трудоемкость O(n)
-        // ресурсоемкость O(n)
-        private void fillList(Node<T> node) {
+        // Трудоемкость O(log n)
+        // ресурсоемкость O(log n)
+        private void fillStack(Node<T> node) {
             if (node != null) {
-                fillList(node.left);
-                list.add(node);
-                fillList(node.right);
+                stack.push(node);
+                fillStack(node.left);
             }
         }
 
@@ -237,9 +229,11 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
          *
          * Средняя
          */
+        // Трудоемкость O(1)
+        // ресурсоемкость O(1)
         @Override
         public boolean hasNext() {
-            return index < list.size();
+            return !stack.isEmpty();
         }
 
         /**
@@ -255,12 +249,18 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
          *
          * Средняя
          */
+        // Трудоемкость O(log n)
+        // ресурсоемкость O(log n)
         @Override
         public T next() {
-            if (!hasNext()) {
+            if (stack.isEmpty()) {
                 throw new NoSuchElementException();
             }
-            return list.get(index++).value;
+            current = stack.pop();
+            if (current.right != null) {
+                fillStack(current.right);
+            }
+            return current.value;
         }
 
         /**
@@ -277,12 +277,11 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
          */
         @Override
         public void remove() {
-            Node<T> temp = list.get(index - 1);
-            if (temp == null || wasRemoved) {
+            if (current == null) {
                 throw new IllegalStateException();
             }
-            BinarySearchTree.this.remove(temp.value);
-            wasRemoved = true;
+            BinarySearchTree.this.remove(current.value);
+            current = null;
         }
     }
     // трудоемкость O(log n)

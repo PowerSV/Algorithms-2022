@@ -180,6 +180,12 @@ abstract class AbstractBinarySearchTreeTest {
                 bst.remove(toRemove),
                 "An element that was already not in the tree was supposedly removed."
             )
+            val empty = create()
+            val element = 1337
+            assertFalse(
+                empty.remove(element),
+                "remove element from empty tree"
+            )
         }
     }
 
@@ -242,6 +248,10 @@ abstract class AbstractBinarySearchTreeTest {
             }
             println("Initial set: $controlSet")
             val binarySet = create()
+            val myIterator = binarySet.iterator()
+            assertFailsWith<java.util.NoSuchElementException>("iter into empty tree") {
+                myIterator.next()
+            }
             for (element in controlSet) {
                 binarySet += element
             }
@@ -249,9 +259,9 @@ abstract class AbstractBinarySearchTreeTest {
             println("Control set: $controlSet")
             println("Removing element $toRemove from the tree through the iterator...")
             val iterator = binarySet.iterator()
-//            assertFailsWith<IllegalStateException>("Something was supposedly removed before the iteration started") {
-//                iterator.remove()
-//            }
+            assertFailsWith<IllegalStateException>("Something was supposedly removed before the iteration started") {
+                iterator.remove()
+            }
             var counter = binarySet.size
             print("Iterating: ")
             while (iterator.hasNext()) {

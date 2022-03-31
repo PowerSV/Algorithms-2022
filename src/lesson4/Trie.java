@@ -2,6 +2,7 @@ package lesson4;
 
 import java.util.*;
 import kotlin.NotImplementedError;
+import lesson3.BinarySearchTree;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -92,8 +93,56 @@ public class Trie extends AbstractSet<String> implements Set<String> {
     @NotNull
     @Override
     public Iterator<String> iterator() {
-        // TODO
-        throw new NotImplementedError();
+        return new TrieIterator();
+    }
+
+    public class TrieIterator implements Iterator<String> {
+        List<String> list;
+        int index;
+        String current = null;
+
+        private TrieIterator() {
+            list = new ArrayList<>();
+            index = 0;
+            if (root != null) {
+                fillList("", root.children);
+            }
+        }
+
+        private void fillList(String path, Map<Character, Node> children) {
+            Node currentNode;
+            for (char key : children.keySet()) {
+                currentNode = children.get(key);
+                if (key != (char) 0) {
+                    fillList(path + key, currentNode.children);
+                } else {
+                    list.add(path);
+                }
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index < list.size();
+        }
+
+        @Override
+        public String next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            current = list.get(index++);
+            return current;
+        }
+
+        @Override
+        public void remove() {
+            if (current == null) {
+                throw new IllegalStateException();
+            }
+            Trie.this.remove(current);
+            current = null;
+        }
     }
 
 }
