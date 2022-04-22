@@ -3,9 +3,8 @@ package lesson5;
 import kotlin.NotImplementedError;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.AbstractSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class OpenAddressingSet<T> extends AbstractSet<T> {
 
@@ -15,7 +14,15 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
 
     private final Object[] storage;
 
+    private final boolean[] deletedMark;
+
     private int size = 0;
+
+    private enum Flag {
+        DELETED
+    }
+
+    private final Object deleted = new Object();
 
     private int startingIndex(Object element) {
         return element.hashCode() & (0x7FFFFFFF >> (31 - bits));
@@ -28,6 +35,7 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
         this.bits = bits;
         capacity = 1 << bits;
         storage = new Object[capacity];
+        deletedMark = new boolean[capacity];
     }
 
     @Override
@@ -67,7 +75,7 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
         int startingIndex = startingIndex(t);
         int index = startingIndex;
         Object current = storage[index];
-        while (current != null) {
+        while (current != null && current != Flag.DELETED) {
             if (current.equals(t)) {
                 return false;
             }
@@ -92,10 +100,34 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
      * Спецификация: {@link Set#remove(Object)} (Ctrl+Click по remove)
      *
      * Средняя
+     * @noinspection unchecked
      */
     @Override
     public boolean remove(Object o) {
-        return super.remove(o);
+        int indexOfRemovable = indexOf((T) o);
+        if (indexOfRemovable == -1) {
+            return false;
+        }
+        storage[indexOfRemovable] = Flag.DELETED;
+        size--;
+        return true;
+    }
+
+    private int indexOf(T o) {
+        int startingIndex = startingIndex(o);
+        int index = startingIndex;
+        Object current = storage[index];
+        while (current != null) {
+            if (current.equals(o)) {
+                return index;
+            }
+            index = (index + 1) % capacity;
+            if (index == startingIndex) {
+                break;
+            }
+            current = storage[index];
+        }
+        return -1;
     }
 
     /**
@@ -111,7 +143,40 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
     @NotNull
     @Override
     public Iterator<T> iterator() {
-        // TODO
-        throw new NotImplementedError();
+        return new OpenAddressingSetIterator();
+    }
+
+    private class OpenAddressingSetIterator implements Iterator<T> {
+
+        private final Deque<T> stack = Arrays.stream(storage)
+                .filter(Objects::nonNull)
+                .filter(element -> !element.equals(Flag.DELETED))
+                .map(element -> (T) element)
+                .collect(Collectors.toCollection(ArrayDeque::new));
+
+        private T current = null;
+
+        @Override
+        public boolean hasNext() {
+            return !stack.isEmpty();
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            current = stack.pop();
+            return current;
+        }
+
+        @Override
+        public void remove() {
+            if (current == null) {
+                throw new IllegalStateException();
+            }
+            OpenAddressingSet.this.remove(current);
+            current = null;
+        }
     }
 }

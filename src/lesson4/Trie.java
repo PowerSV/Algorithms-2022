@@ -1,8 +1,7 @@
 package lesson4;
 
 import java.util.*;
-import kotlin.NotImplementedError;
-import lesson3.BinarySearchTree;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,44 +96,43 @@ public class Trie extends AbstractSet<String> implements Set<String> {
     }
 
     public class TrieIterator implements Iterator<String> {
-        List<String> list;
-        int index;
-        String current = null;
+
+        private final Deque<String> stack = new ArrayDeque<>();
+        private String current = null;
 
         private TrieIterator() {
-            list = new ArrayList<>();
-            index = 0;
             if (root != null) {
-                fillList("", root.children);
+                fillStack("", root.children);
             }
         }
-
-        private void fillList(String path, Map<Character, Node> children) {
+        // Трудоёмкость - O(n); Ресурсоёмкость - O(n)
+        private void fillStack(String path, Map<Character, Node> children) {
             Node currentNode;
             for (char key : children.keySet()) {
-                currentNode = children.get(key);
                 if (key != (char) 0) {
-                    fillList(path + key, currentNode.children);
+                    currentNode = children.get(key);
+                    fillStack(path + key, currentNode.children);
                 } else {
-                    list.add(path);
+                    stack.push(path);
                 }
             }
         }
 
+        // Трудоёмкость - O(1); Ресурсоёмкость - O(1)
         @Override
         public boolean hasNext() {
-            return index < list.size();
+            return !stack.isEmpty();
         }
-
+        // Трудоёмкость - O(1); Ресурсоёмкость - O(1)
         @Override
         public String next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            current = list.get(index++);
+            current = stack.pop();
             return current;
         }
-
+        // Трудоёмкость - O(n); Ресурсоёмкость - O(n)
         @Override
         public void remove() {
             if (current == null) {
