@@ -102,6 +102,10 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
      * Средняя
      * @noinspection unchecked
      */
+
+    //Трудоемкость в худшем случае O(n)
+    //В худшем случае O(capacity)
+    //Ресурсоемкость O(1)
     @Override
     public boolean remove(Object o) {
         int indexOfRemovable = indexOf((T) o);
@@ -123,7 +127,7 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
             }
             index = (index + 1) % capacity;
             if (index == startingIndex) {
-                break;
+                return -1;
             }
             current = storage[index];
         }
@@ -147,7 +151,8 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
     }
 
     private class OpenAddressingSetIterator implements Iterator<T> {
-
+        // Трудоемкость   O(capacity)
+        // Ресурсоемкость O(size)
         private final Deque<T> stack = Arrays.stream(storage)
                 .filter(Objects::nonNull)
                 .filter(element -> !element.equals(Flag.DELETED))
