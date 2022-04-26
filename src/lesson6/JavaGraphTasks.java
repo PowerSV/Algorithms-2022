@@ -2,8 +2,8 @@ package lesson6;
 
 import kotlin.NotImplementedError;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class JavaGraphTasks {
@@ -33,8 +33,51 @@ public class JavaGraphTasks {
      * Справка: Эйлеров цикл -- это цикл, проходящий через все рёбра
      * связного графа ровно по одному разу
      */
+    // Трудоемкость O(E + V)
+    // Ресурсоемкость O(E + v)
     public static List<Graph.Edge> findEulerLoop(Graph graph) {
-        throw new NotImplementedError();
+        List<Graph.Edge> result = new ArrayList<>();
+
+        Set<Graph.Vertex> vertices = graph.getVertices();
+        if (vertices.isEmpty()) {
+            return result;
+        }
+
+        for (Graph.Vertex vertex : vertices) {
+            Set<Graph.Vertex> neighbors = graph.getNeighbors(vertex);
+            if (neighbors.size() == 0 || neighbors.size() % 2 != 0) {
+                return result;
+            }
+        }
+
+        Deque<Graph.Vertex> stack = new ArrayDeque<>();
+        stack.push(vertices.iterator().next());
+        Set<Graph.Edge> visitedEdges = new HashSet<>();
+        while (!stack.isEmpty()) {
+            Graph.Vertex current = stack.peek();
+            boolean foundEdge = false;
+            for (Graph.Vertex vertex : graph.getNeighbors(current)) {
+                Graph.Edge currentEdge = graph.getConnection(current, vertex);
+                if (visitedEdges.contains(currentEdge)){
+                    continue;
+                }
+                visitedEdges.add(currentEdge);
+                stack.push(vertex);
+                foundEdge = true;
+                break;
+            }
+            if (!foundEdge) {
+                stack.pop();
+                if (stack.peek() != null) {
+                    result.add(graph.getConnection(current, stack.peek()));
+                }
+            }
+        }
+
+        if (result.size() != graph.getEdges().size()) {
+            return new ArrayList<>();
+        }
+        return result;
     }
 
     /**
@@ -117,8 +160,35 @@ public class JavaGraphTasks {
      *
      * Ответ: A, E, J, K, D, C, H, G, B, F, I
      */
+    // Трудоемкость O(E + V)
+    // Ресурсоемкость O(E + V)
     public static Path longestSimplePath(Graph graph) {
-        throw new NotImplementedError();
+        Path result = new Path();
+        Set<Graph.Vertex> vertexSet = graph.getVertices();
+        if (vertexSet.isEmpty()) {
+            return result;
+        }
+
+        Deque<Path> stack = new ArrayDeque<>();
+        int maxLen = 0;
+        for (Graph.Vertex v : vertexSet) {
+            stack.add(new Path(v));
+        }
+
+        while (!stack.isEmpty()) {
+            Path path = stack.pop();
+            if (path.getLength() > maxLen) {
+                result = path;
+                maxLen = path.getLength();
+            }
+            List<Graph.Vertex> vertexList = path.getVertices();
+            Graph.Vertex vertex = vertexList.get(path.getLength());
+            Set<Graph.Vertex> neighbors = graph.getNeighbors(vertex);
+            for (Graph.Vertex v : neighbors) {
+                if (!path.contains(v)) stack.add(new Path(path, graph, v));
+            }
+        }
+        return result;
     }
 
 
