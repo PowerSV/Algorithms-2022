@@ -102,11 +102,14 @@ public class Trie extends AbstractSet<String> implements Set<String> {
         private String currentWord;
 
         // Трудоемкость O(1)
+        // Ресурсоемкость O(1)
         @Override
         public boolean hasNext() {
             return wordCounter < size;
         }
 
+        // Трудоемкость O(word.length) где n - длина слова
+        // Ресурсоемкость O(m) где m - длина самого длинного слова
         @Override
         public String next() {
             if (!hasNext()) {
@@ -139,6 +142,9 @@ public class Trie extends AbstractSet<String> implements Set<String> {
 
             int index = 0;
             for (char character : childrenKeySet) {
+                if (keySetIndexes.get(levelIndex) >= childrenKeySet.size()) {
+                    break;
+                }
                 if (index < keySetIndexes.get(levelIndex)) {
                     index++;
                     continue;
@@ -153,7 +159,8 @@ public class Trie extends AbstractSet<String> implements Set<String> {
             return levelIterator(root, "", ' ', 0);
         }
 
-        //Трудоемкость: O(n) где n - длина слова
+        // Трудоемкость: O(n) где n - длина слова
+        // Ресурсоемкость O(1)
         @Override
         public void remove() {
             if (currentWord == null) {

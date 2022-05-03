@@ -1,10 +1,11 @@
 package lesson5;
 
-import kotlin.NotImplementedError;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.AbstractSet;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 public class OpenAddressingSet<T> extends AbstractSet<T> {
 
@@ -14,15 +15,11 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
 
     private final Object[] storage;
 
-    private final boolean[] deletedMark;
-
     private int size = 0;
 
     private enum Flag {
         DELETED
     }
-
-    private final Object deleted = new Object();
 
     private int startingIndex(Object element) {
         return element.hashCode() & (0x7FFFFFFF >> (31 - bits));
@@ -35,7 +32,6 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
         this.bits = bits;
         capacity = 1 << bits;
         storage = new Object[capacity];
-        deletedMark = new boolean[capacity];
     }
 
     @Override
@@ -151,37 +147,47 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
     }
 
     private class OpenAddressingSetIterator implements Iterator<T> {
-        // Трудоемкость   O(capacity)
-        // Ресурсоемкость O(size)
-        private final Deque<T> stack = Arrays.stream(storage)
-                .filter(Objects::nonNull)
-                .filter(element -> !element.equals(Flag.DELETED))
-                .map(element -> (T) element)
-                .collect(Collectors.toCollection(ArrayDeque::new));
 
+        @SuppressWarnings("uncheked")
         private T current = null;
+        private int index = 0;
+        private int iterationCounter = 0;
 
+        // Трудоемкость O(1)
+        // Ресурсоемкость O(1)
         @Override
         public boolean hasNext() {
-            return !stack.isEmpty();
+            return iterationCounter < size;
         }
 
+        // Трудоемкость O(n)
+        // Ресурсоемкость O(1)
+        @SuppressWarnings("unchecked")
         @Override
         public T next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            current = stack.pop();
+            while (storage[index] == null || storage[index] == Flag.DELETED) {
+                index++;
+            }
+            iterationCounter++;
+            current = (T) storage[index];
+            index++;
             return current;
         }
 
+        // Трудоемкость O(1)
+        // Ресурсоемкость O(1)
         @Override
         public void remove() {
             if (current == null) {
                 throw new IllegalStateException();
             }
-            OpenAddressingSet.this.remove(current);
+            storage[index - 1] = Flag.DELETED;
             current = null;
+            size--;
+            iterationCounter--;
         }
     }
 }
