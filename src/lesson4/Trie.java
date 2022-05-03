@@ -97,50 +97,78 @@ public class Trie extends AbstractSet<String> implements Set<String> {
 
     public class TrieIterator implements Iterator<String> {
 
-        private final Deque<String> stack = new ArrayDeque<>();
-        private String current = null;
+        private int wordCounter = 0;
+        private final ArrayList<Integer> keySetIndexes = new ArrayList<>();
+        private String currentWord;
 
-        private TrieIterator() {
-            if (root != null) {
-                fillStack("", root.children);
-            }
-        }
-        // Трудоёмкость - O(n); Ресурсоёмкость - O(n)
-        private void fillStack(String path, Map<Character, Node> children) {
-            Node currentNode;
-            for (char key : children.keySet()) {
-                if (key != (char) 0) {
-                    currentNode = children.get(key);
-                    fillStack(path + key, currentNode.children);
-                } else {
-                    stack.push(path);
-                }
-            }
-        }
-
-        // Трудоёмкость - O(1); Ресурсоёмкость - O(1)
+        // Трудоемкость O(1)
         @Override
         public boolean hasNext() {
-            return !stack.isEmpty();
+            return wordCounter < size;
         }
-        // Трудоёмкость - O(1); Ресурсоёмкость - O(1)
+
         @Override
         public String next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            current = stack.pop();
-            return current;
+            wordCounter++;
+            currentWord = levelIterator(root, "", ' ', 0);
+            return currentWord;
         }
-        // Трудоёмкость - O(n); Ресурсоёмкость - O(n)
+
+        private void moveToNextChar(int levelIndex) {
+            keySetIndexes.set(levelIndex - 1, keySetIndexes.get(levelIndex - 1) + 1);
+            keySetIndexes.set(levelIndex, 0);
+        }
+
+        private String levelIterator(Node node, String word, char currentChar, int levelIndex) {
+            if (levelIndex >= keySetIndexes.size()) {
+                keySetIndexes.add(0);
+            }
+            if (node != root && currentChar == (char) 0) {
+                moveToNextChar(levelIndex);
+                return word;
+            }
+
+            Set<Character> childrenKeySet = node.children.keySet();
+            if (childrenKeySet.isEmpty()) {
+                moveToNextChar(levelIndex);
+                return levelIterator(root, "", ' ', 0);
+            }
+
+            int index = 0;
+            for (char character : childrenKeySet) {
+                if (index < keySetIndexes.get(levelIndex)) {
+                    index++;
+                    continue;
+                }
+                if (node == root) {
+                    return levelIterator(node.children.get(character), word, character, levelIndex + 1);
+                }
+                return levelIterator(node.children.get(character),
+                        word + currentChar, character, levelIndex + 1);
+            }
+            moveToNextChar(levelIndex);
+            return levelIterator(root, "", ' ', 0);
+        }
+
+        //Трудоемкость: O(n) где n - длина слова
         @Override
         public void remove() {
-            if (current == null) {
+            if (currentWord == null) {
                 throw new IllegalStateException();
             }
-            Trie.this.remove(current);
-            current = null;
+            Trie.this.remove(currentWord);
+            currentWord = null;
+            wordCounter--;
+            for (int i = 1; i < keySetIndexes.size(); i++) {
+                int prevLvlIndex = keySetIndexes.get(i - 1);
+                if (keySetIndexes.get(i) == 0 && prevLvlIndex != 0) {
+                    keySetIndexes.set(i - 1, prevLvlIndex - 1);
+                }
+            }
         }
-    }
 
+    }
 }
