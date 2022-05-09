@@ -148,7 +148,6 @@ public class OpenAddressingSet<T> extends AbstractSet<T> {
 
     private class OpenAddressingSetIterator implements Iterator<T> {
 
-        @SuppressWarnings("uncheked")
         private T current = null;
         private int index = 0;
         private int iterationCounter = 0;
